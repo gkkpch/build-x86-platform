@@ -8,11 +8,14 @@ See the config.x86 in the config directory.
 
 ## **Prerequisites**
 
-This build process has been tested on Debia Buster (Debian 10)and Ubuntu 22.04  
-You will need the following minimal packages:
+This build process has been tested on Debia Buster (Debian 10), Ubuntu 22.04 and Ubuntu 23.10  
+Some prerequisite packages may already have been installed during the OS install. Make sure you have the following.
+You will need the following minimal packages (including the ones you would need for Volumio building):
 
 ```
-build-essential bc kmod flex cpio libncurses5-dev libelf-dev libssl-dev bison rsync libncurses-dev debhelper
+build-essential ca-certificates curl debootstrap dosfstools git jq kpartx libssl-dev lz4 lzop md5deep multistrap
+parted patch pv qemu-user-static qemu-utils squashfs-tools u-boot-tools wget xz-utils zip 
+kmod flex cpio libncurses5-dev libelf-dev libssl-dev bison rsync libncurses-dev debhelper
 ```
 
 ## History
