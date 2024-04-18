@@ -1,6 +1,6 @@
 # Build the Volumio x86 linux kernel
 Copyright (c) 2022, 2023, 24 Gé Koerkamp / volumio@bluewin.ch
-
+ 
 ## **Intro**
 This script is used for building the necessary x86 platform files, which includes kernel, firmware, scripts etc. It does NOT build an image.  
 This is default set to kernel 6.1.y, but can still be used to build platform files with kernel 5.10.y  
