@@ -1,4 +1,4 @@
-!/bin/bash
+#!/bin/bash
 #
 # Copyright (c) 2022, 2023 Gé Koerkamp / ge(dot)koerkamp(at)volum##(dot)com
 #
