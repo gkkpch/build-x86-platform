@@ -43,8 +43,9 @@ clean_previous_builds() {
     rm $PLATFORMDIR/amd64*${KVERPREV}*_defconfig
   fi
   set -- $PLATFORMDIR/linux-*${KVERPREV}*.deb
+  echo "set" $1
   if [ -f "$1" ]; then
-    rm $PLATFORMDIR/linux-*${KVERPREV}*.deb
+    rm $PLATFORMDIR/linux-*${KVER}.${KPATCH}.${KSUB}*.deb
   fi
 
 }
