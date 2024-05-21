@@ -210,6 +210,7 @@ Add the new date to config/config.x86 and start the merge (see above)
 |20231208|gkkpch|Kernel 6.6.y LTS: bumped to 6.6.5
 |||Moved to Volumio repo
 |20231220|gkkpch|Documented the re-factored patching process
+|20231220|gkkpch|Remove commit-id from .deb package names"
 
 <br />
 <br />
