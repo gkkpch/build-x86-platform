@@ -43,7 +43,6 @@ clean_previous_builds() {
     rm $PLATFORMDIR/amd64*${KVERPREV}*_defconfig
   fi
   set -- $PLATFORMDIR/linux-*${KVERPREV}*.deb
-  echo "set" $1
   if [ -f "$1" ]; then
     rm $PLATFORMDIR/linux-*${KVER}.${KPATCH}.${KSUB}*.deb
   fi
@@ -177,7 +176,7 @@ compile_kernel() {
   
   log "Compiling kernel ${KERNELVER}"
   start=$(date +%s.%N)
-  make -j$(nproc) deb-pkg
+  make -j$(nproc) deb-pkg KDEB_PKGVERSION=$(make kernelversion)
 }
 
 move_to_storage() {
