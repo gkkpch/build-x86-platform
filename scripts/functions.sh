@@ -139,10 +139,14 @@ prep_kernel_config() {
   if [ -f ${PLATFORMDIR}/${KERNELCONFIG} ]; then
     cp ${PLATFORMDIR}/${KERNELCONFIG} ${KERNELDIR}/arch/x86/configs/${KERNELCONFIG}
   else
-    set -- $PLATFORMDIR/amd64-volumio-min*
-    if [ -f "$1" ]; then
+    if [ -z ${KERNELBRANCH_PREV} ]; then
+    echo "Previous: " ${KERNELBRANCH_PREV}
+      log "Previous kernel branch not specified in config.x86, aborting" "err"
+      exit 255
+    fi
+    if [ -f "$PLATFORMDIR/amd64-volumio-min-${KERNELBRANCH_PREV}_defconfig" ]; then
       log "Custom kernel configuration file does not exist, copy from last compiled kernel configuration"
-      cp ${PLATFORMDIR}/amd64-volumio-min*_defconfig ${KERNELDIR}/arch/x86/configs/${KERNELCONFIG}
+      cp ${PLATFORMDIR}/amd64-volumio-min-${KERNELBRANCH_PREV}_defconfig ${KERNELDIR}/arch/x86/configs/${KERNELCONFIG}
     else
       log "Default kernel configuration not found, aborting" "err"
       exit 255

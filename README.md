@@ -65,7 +65,7 @@ Keep these in folder ```build-x86-platform/sources``` for later reference, group
 When set to "yes". the kernel configuration settings can be modified, the menuconfig dialogue will appear.  
 Configuration modifications will be saved in ```/platform-x86/packages-buster/amd64-volumio-min-<kernelbranch>_defconfig``` and reused with future kernel compiles.
 
-## **Add support for the current Release Candidate kernel**
+a## **Add support for a current Release Candidate kernel**
 Release Candidate kernels are not part of the ```linux-stable``` repo.  
 The compilation of such a kernel requires
 * manually clone the current kernel repo after checking the current rc name (e.g. 6.3-rc7):
@@ -95,9 +95,10 @@ For the sources and patches, follow the instructions below (support for a new ke
 It is advised to use LTS kernels whenever possible. Once Volumio is working with an LTS version, you will have years of support to come. This kernel build process will keep maintenance effort to a minimum.
 * Create the new ```./sources/<kernelbranch>``` folder.
 * Create the new ```./patches/<kernelbranch>``` folder.
-* Copy the custom sources from a **previous** ```./sources/<major-kernelversion/``` (the closest version you have) to the new patches folder.
-    * Note: Some of the existing patches for Wireless Drivers may not apply anymore. Kernels 6.2.y and 6.3-rc7 already include more Realtek chip support. As an example,  RTL8822BU is supported out-of-the-box (and a few more). Please check for duplicates by comparing the ```Kconfig``` files in Realtek folders like ```rtw88``` and ```rtw99```. Just copy the remaining custom patches. 
-    * re-apply the patches one-by-one, set the PATCH_KERNEL parameter in config.x86 for that purpose. Use the existing patches and sources from the older release as reference. Be aware, that patching or compiling may not always work.
+* Build the kernel first without patching or configuration chnages.
+For the patch-process, use the relevant patch sources from a **previous** ```./patches/<major-kernelversion/``` (the closest version you have) to the new patches folder. 
+    * Note: Some of the existing patches for Wireless Drivers may not apply anymore. E.g. kernels 6.2.y and 6.3-rc7 already include more Realtek chip support. As an example,  RTL8822BU is supported out-of-the-box (and a few more). Please check for duplicates by comparing the ```Kconfig``` files in Realtek folders like ```rtw88``` and ```rtw99```. Just copy the remaining custom patches. 
+    * re-apply the patches one-by-one using the patch-process as described above. Be aware, that patching or compiling may not always work.
     * some may be mismatched a few lines in case the source was changed in the new kernel version.
     * in case the patch does not apply anymore because of errors in custom sources, consult the internet and apply the necessary fixes or replace the patch & source. This is not always trivial.  
 
@@ -111,9 +112,15 @@ It is advised to use LTS kernels whenever possible. Once Volumio is working with
     ```
     KERNELBRANCH="6.2.y"
     ```
+
+    * modify the previous kernelbranch
+    ```
+    KERNELBRANCH_PREV="6.1.y"
+    ```
+
+    * See "kernel configuration" above, new kernels usually have support for new hardware, notably ethernet, wireless and bluetooth devices, but also touchscreens etc. In case you know some, make sure to enable them. In all other cases, you may have to rely on feedback from users. Don't forget to add corresponding firmware when needed.
+    
 * Start the build process.
-
-
 
 ## **Firmware Maintenance**
 
@@ -211,7 +218,7 @@ Add the new date to config/config.x86 and start the merge (see above)
 |||Moved to Volumio repo
 |20231220|gkkpch|Documented the re-factored patching process
 |20231220|gkkpch|Remove commit-id from .deb package names"
-
+|20241121|gkkpch|Preparations for kernel 6.12.y (waiting for 6.12.y LTS)
 <br />
 <br />
 <br />

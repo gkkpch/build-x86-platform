@@ -10,6 +10,7 @@ log "PATCHWORKDIR     : ${PATCHWORKDIR}" "cfg"
 log "PLATFORMDIR      : ${PLATFORMDIR}" "cfg"
 
 log "KERNELREPO       : ${KERNELREPO}" "cfg"
+log "KERNELBRANCH_PREV: ${KERNELBRANCH_PREV}" "cfg"
 log "KERNELBRANCH     : ${KERNELBRANCH}" "cfg"
 log "LOCALVERSION     : ${LOCALVERSION}" "cfg"
 
