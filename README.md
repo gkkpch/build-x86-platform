@@ -38,10 +38,11 @@ cd build-x86-platform
 ## **Patching**
 
 **```config.x86 parameter PATCH_KERNEL```**  
-When set to "yes" (active), the build process will only support kernel patching.  
-Kernel configuration and compiling will not be done as long as the patch parameter is active.
+When set to "yes" (active), the build process will supply kernel patching, the kernel will not be compiled.
+This allows you to test patching until the result is OK.  
+Disable ```PATCH_KERNEL``` when done.
 
-After cloning/ updating the kernel, platform repos and after applying volumio patches, the build process reaches a break-point and displays:
+After cloning/ updating the kernel, platform repos and after applying current volumio patches, the build process reaches a break-point and displays:
 ```
 [ .. ] Now ready for additional sources and patches
 [ .... ] Workfolder <workfolder> will be used to create the patch file
@@ -50,10 +51,13 @@ After cloning/ updating the kernel, platform repos and after applying volumio pa
 At this point new patches can be made in the kernel tree.  
 When you're ready, or did not have any patches, press ```[Enter]```.  
 * Without patches, the process ends here.  
-* With patches, you will be prompted to enter a name for a patch file, which will also be used as a commit message. Please use a meaningfull name, refer to the existing patch names as examples.   
-The patch will automatically be prefixed with a sequence number (the highest existing prefix number, incremented by 1).  
-You can change/ correct the name later, but please do not change the sequence number. The sequence number ensures that patches are applied in the correct order.  
-Check the patch and when correct, move it to the ```build-x86-platform/patch``` folder.  From here the patch will be used in the kernel build process. Patches (still) in the work folder have no effect.  
+* With patches, you will be prompted to enter a name for a patch file, which will also be used as a commit message.   
+Please use a meaningfull name, refer to the existing patch names as examples.   
+The patch will automatically be prefixed with a sequence number (the highest existing prefix number, incremented by 1), extension ```.patch``` will also be added to the name.  
+You can change/ correct the name later, but be carefull with the sequence number.  
+The sequence number ensures that patches are applied in the reuired order.     
+Check the patch and when correct, move it to the ```build-x86-platform/patch``` folder.   
+From here the patch will be used in the kernel build process. Patches (still) in the work folder have no effect.  
 You can clear the work folder afterwards.  
 
 ### New kernel sources
