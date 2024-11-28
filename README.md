@@ -55,7 +55,7 @@ When you're ready, or did not have any patches, press ```[Enter]```.
 Please use a meaningfull name, refer to the existing patch names as examples.   
 The patch will automatically be prefixed with a sequence number (the highest existing prefix number, incremented by 1), extension ```.patch``` will also be added to the name.  
 You can change/ correct the name later, but be carefull with the sequence number.  
-The sequence number ensures that patches are applied in the reuired order.     
+The sequence number ensures that patches are applied in the patched order (a patch could be a patch on top o another).     
 Check the patch and when correct, move it to the ```build-x86-platform/patch``` folder.   
 From here the patch will be used in the kernel build process. Patches (still) in the work folder have no effect.  
 You can clear the work folder afterwards.  
@@ -222,7 +222,9 @@ Add the new date to config/config.x86 and start the merge (see above)
 |||Moved to Volumio repo
 |20231220|gkkpch|Documented the re-factored patching process
 |20231220|gkkpch|Remove commit-id from .deb package names"
-|20241121|gkkpch|Preparations for kernel 6.12.y (waiting for 6.12.y LTS)
+|20241127|gkkpch|Preparations for kernel 6.12.y (waiting for 6.12.y LTS)
+|20241128|gkkpch|Added DSD patches (from 6.6 plus a new one)
+|||Firmware: added version from 20241110
 <br />
 <br />
 <br />
