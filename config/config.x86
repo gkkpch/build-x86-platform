@@ -5,10 +5,15 @@ KERNELREPO="git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.gi
 #KERNELBRANCH="5.10.y"
 #KERNELBRANCH="6.1.y"
 KERNELBRANCH="6.6.y"
+#KERNELBRANCH="6.12.y"
+KERNELBRANCH_PREV="6.1.y"
 KERNELDIR="${SRC}"/linux-${KERNELBRANCH}
 KERNELCONFIG="amd64-volumio-min-${KERNELBRANCH}_defconfig"
+PATCH_KERNEL="no"
+CONFIGURE_KERNEL="no"
 
 PATCHDIR="${SRC}"/patches
+PATCHWORKDIR="${SRC}"/patchesworkdir
 PLATFORMREPO="https://github.com/volumio/platform-x86"
 PLATFORMDIR="${SRC}"/platform-x86/packages-buster
 

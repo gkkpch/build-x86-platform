@@ -22,7 +22,6 @@ get_platform_repo() {
 }
 
 clean_previous_builds() {
-
   KVER=$(cat Makefile| grep "^VERSION = " | awk -F "= " '{print $2}')
   KPATCH=$(cat Makefile| grep -e "^PATCHLEVEL = " | awk -F "= " '{print $2}')
   KSUB=$(cat Makefile| grep -e "^SUBLEVEL = " | awk -F "= " '{print $2}')
@@ -34,7 +33,7 @@ clean_previous_builds() {
   log "Kernel sub version ${KSUB}" "info"
   log "Previous build version ${KVERPREV}" "info"
 
-  log "Removing previous build versions from the build folder/"
+  log "Removing previous build versions from the build folder"
   [[ -d ../$KERNELDIR.orig ]] && rm -r ../$KERNELDIR.orig
   [[ -d ../$KERNELDIR/debian ]] && rm -r ../$KERNELDIR/debian
 
@@ -45,19 +44,19 @@ clean_previous_builds() {
   fi
   set -- $PLATFORMDIR/linux-*${KVERPREV}*.deb
   if [ -f "$1" ]; then
-    rm $PLATFORMDIR/linux-*${KVERPREV}*.deb
+    rm $PLATFORMDIR/linux-*${KVER}.${KPATCH}.${KSUB}*.deb
   fi
 
 }
 
 get_latest_kernel() {
-
   log "Getting the latest kernel version"
   if [[ ! $KERNELBRANCH =~ "-rc" ]]; then
-    log "Cleaning the kernel repo"
-    git clean -qdfx
-    git checkout -qf HEAD
-    git pull
+    log "Resetting the kernel repo" "info"
+      git fetch origin
+      git reset --hard origin/linux-$KERNELBRANCH
+      git clean -ffdx 1> /dev/null 2>&1
+      git pull
   else
     log "$KERNELBRANCH is a release candidate, up-to-date"
   fi  
@@ -73,74 +72,118 @@ get_latest_kernel() {
   log "Kernel sub version ${KSUB}" "cfg"
 
   echo 1 > .version
-  log "Package version $KERNELVER-$(<.version)" "info"
+  log "Debian packages version number used:" "$KERNELVER-$(<.version)"
   touch .scmversion
 }
 
 add_additional_sources() {
-  log "Checking custom additions"
-  if [ ! -d ${SRC}/sources/${KERNELBRANCH} ] ; then
-    log "No custom kernel sources found" "wrn"
-  else
-    log "Adding additional kernel sources" "info"
-    cp -dR ${SRC}/sources/${KERNELBRANCH}/* .
-  fi
+  :
+}
 
+add_user_patches() {
+  if [ ! -d ${SRC}/patches/${KERNELBRANCH} ] ; then
+    log "No existing patches found" "wrn"
+  else
+    FILES=${SRC}/patches/${KERNELBRANCH}/*.patch
+    if [ "$(echo ${FILES})" == "${SRC}/patches/${KERNELBRANCH}/*.patch" ]; then
+      log "No existing patches found" "wrn"
+    else  
+      NUMFILES=$(echo $FILES | awk -F' ' '{print NF}')
+      log "Number of existing patches to apply:" "${NUMFILES}"
+      shopt -s nullglob
+      for f in ${FILES}
+        do
+          log "Appying $f" "info"
+          git apply $f 1> /dev/null 2>&1
+        done
+      git add * 1> /dev/null 2>&1
+      git commit -m "Added existing Volumio patches" 1> /dev/null 2>&1
+    fi  
+  fi
+}
+
+
+patch_kernel() {
+   if [[ ! $KERNELBRANCH =~ "-rc" ]]; then   
+      log "Now ready for additional sources and patches"
+      log "Workfolder ${PATCHWORKDIR} will be used when creating a patch file" "info"
+      RESUMEPROMPT=$(log "Press [Enter] key to resume ..." "info")
+      read -p "${RESUMEPROMPT}"
+      [ -d $PATCHWORKDIR/${KERNELBRANCH} ] || mkdir -p $PATCHWORKDIR/${KERNELBRANCH}
+      
+      PENDING_COMMIT=$(git status | grep -o 'nothing to commit')
+      if [ ! "${PENDING_COMMIT}" == "nothing to commit" ]; then
+         git add * 1> /dev/null 2>&1
+         log "Add a meaningfull name for the patchfile after the prompt"
+         log "Note: whitespaces will be replaced by '-'" "info"
+         echo -n "Your filename > " 
+         read COMMITMSG
+ 	 COMMITMSG=$(echo $COMMITMSG | sed 's/ /-/g')
+         git commit -m ${COMMITMSG} 1> /dev/null 2>&1
+         NUMFILES=$((NUMFILES+1))
+         git format-patch --start-number ${NUMFILES} -1 HEAD -o ${PATCHWORKDIR}/${KERNELBRANCH} 1> /dev/null 2>&1
+         log "New patchfile:" "$(printf '%04d' ${NUMFILES})-${COMMITMSG}.patch"
+         log "$(git log -1)" 
+         log "Check it and move it to $PATCHDIR/${KERNELBRANCH}" "info"
+      else
+         log "No modifications were found, no new patch file was created..." "wrn"   
+      fi   
+   else
+      log "${KERNELBRANCH} is a release candidate, cannot create patches" "error"
+   fi
+}
+
+
+prep_kernel_config() {
   log "Adding the default amd64-volumio-min kernel configuration" "info"
   if [ -f ${PLATFORMDIR}/${KERNELCONFIG} ]; then
     cp ${PLATFORMDIR}/${KERNELCONFIG} ${KERNELDIR}/arch/x86/configs/${KERNELCONFIG}
   else
-    set -- $PLATFORMDIR/amd64-volumio-min*
-    if [ -f "$1" ]; then
+    if [ -z ${KERNELBRANCH_PREV} ]; then
+    echo "Previous: " ${KERNELBRANCH_PREV}
+      log "Previous kernel branch not specified in config.x86, aborting" "err"
+      exit 255
+    fi
+    if [ -f "$PLATFORMDIR/amd64-volumio-min-${KERNELBRANCH_PREV}_defconfig" ]; then
       log "Custom kernel configuration file does not exist, copy from last compiled kernel configuration"
-      cp ${PLATFORMDIR}/amd64-volumio-min*_defconfig ${KERNELDIR}/arch/x86/configs/${KERNELCONFIG}
+      cp ${PLATFORMDIR}/amd64-volumio-min-${KERNELBRANCH_PREV}_defconfig ${KERNELDIR}/arch/x86/configs/${KERNELCONFIG}
     else
       log "Default kernel configuration not found, aborting" "err"
       exit 255
     fi
   fi
-}
-
-add_user_patches() {
-
-  if [ ! -d ${SRC}/patches/${KERNELBRANCH} ] ; then
-    log "No custom patches found" "wrn"
-  else
-    log "Applying accumulative kernel patches"
-    for f in ${PATCHDIR}/${KERNELBRANCH}/*
-      do
-      log "Appying $f" "info"
-      git apply $f
-    done
-  fi
-}
-
-kernel_config() {
-
   log "Preparing volumio kernel config file"
   make clean
   log "Using configuration ${KERNELDIR}/arch/x86/configs/${KERNELCONFIG}" "info"
   make ${KERNELCONFIG}
-  make menuconfig
   log "Saving .config to defconfig"
   make savedefconfig
-  echo "Copying defconfig to volumio kernel config"
-  cp defconfig ${KERNELDIR}/arch/x86/configs/${KERNELCONFIG}
+}
+  
+configure_kernel() {
+  if [ "${CONFIGURE_KERNEL}" == "yes" ]; then
+     log "Starting kernel configuration menu" "info"
+     make menuconfig
+     log "Saving .config to defconfig"
+     make savedefconfig
+     echo "Copying defconfig to volumio kernel config"
+     cp defconfig ${KERNELDIR}/arch/x86/configs/${KERNELCONFIG}
+  fi   
 }
 
 compile_kernel() {
-
   log "Copying volumio kernel config to platform folder (history)"
   cp defconfig $PLATFORMDIR/amd64-volumio-min-${KERNELVER}-`date +%Y.%m.%d-%H.%M`_defconfig
-  cp defconfig $PLATFORMDIR/amd64-volumio-min-${KERNELBRANCH}_defconfig
-
+  if [ "${CONFIGURE_KERNEL}" == "yes" ]; then
+     cp defconfig $PLATFORMDIR/amd64-volumio-min-${KERNELBRANCH}_defconfig
+  fi
+  
   log "Compiling kernel ${KERNELVER}"
   start=$(date +%s.%N)
-  make -j$(nproc) deb-pkg
+  make -j$(nproc) deb-pkg KDEB_PKGVERSION=$(make kernelversion)
 }
 
 move_to_storage() {
-
   log "Keep local copies"
   [ -d ../local-debs ] || mkdir ../local-debs
   cp ../linux-headers-${KERNELVER}_*amd64*.deb ../local-debs/linux-headers-${KERNELVER}_local_amd64.deb

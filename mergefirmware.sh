@@ -1,11 +1,10 @@
 #!/bin/bash
 #
-# Copyright (c) 2022 Gé Koerkamp / ge.koerkamp@volum##.com
+# Copyright (c) 2022, 2023 Gé Koerkamp / ge(dot)koerkamp(at)volum##(dot)com
 #
 # This script is used for building the linux firmware used for Volumio 3.
 #
 #
-
 
 SRC="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
 # check for whitespace in ${SRC} and exit for safety reasons

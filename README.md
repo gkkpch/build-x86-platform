@@ -1,6 +1,6 @@
 # Build the Volumio x86 linux kernel
-Copyright (c) 2022, 2023 Gé Koerkamp / volumio@bluewin.ch
-
+Copyright (c) 2022, 2023, 24 Gé Koerkamp / volumio@bluewin.ch
+ 
 ## **Intro**
 This script is used for building the necessary x86 platform files, which includes kernel, firmware, scripts etc. It does NOT build an image.  
 This is default set to kernel 6.1.y, but can still be used to build platform files with kernel 5.10.y  
@@ -8,11 +8,14 @@ See the config.x86 in the config directory.
 
 ## **Prerequisites**
 
-This build process has been tested on Debia Buster (Debian 10)and Ubuntu 22.04  
-You will need the following minimal packages:
+This build process has been tested on Debia Buster (Debian 10), Ubuntu 22.04 and Ubuntu 23.10  
+Some prerequisite packages may already have been installed during the OS install. Make sure you have the following.
+You will need the following minimal packages (including the ones you would need for Volumio building):
 
 ```
-build-essential bc kmod flex cpio libncurses5-dev libelf-dev libssl-dev bison rsync libncurses-dev debhelper
+build-essential ca-certificates curl debootstrap dosfstools git jq kpartx libssl-dev lz4 lzop md5deep multistrap
+parted patch pv qemu-user-static qemu-utils squashfs-tools u-boot-tools wget xz-utils zip 
+kmod flex cpio libncurses5-dev libelf-dev libssl-dev bison rsync libncurses-dev debhelper
 ```
 
 ## History
@@ -29,30 +32,44 @@ git clone https://github.com/gkkpch/build-x86-platform --depth 1
 
 ```
 cd build-x86-platform
-./buildx86kernel.sh
+./mkplatform.sh
 ```
 
 ## **Patching**
 
-After cloning/ updating the kernel and platform repos and applying volumio patches, the build process comes to a break-point and displays:
-```
-[ .. ] Now ready for additional sources and patches [ Info ]
-```
-At this point further patches can be made in the kernel tree.  
-Kernel patches are accumulated in ```./patches/<major-kernelversion>/0001-custom-volumio.patch```.  
-When you're ready, or did not have any patches, press [Enter]
+**```config.x86 parameter PATCH_KERNEL```**  
+When set to "yes" (active), the build process will supply kernel patching, the kernel will not be compiled.
+This allows you to test patching until the result is OK.  
+Disable ```PATCH_KERNEL``` when done.
 
-### Additional kernel sources
-Currently, custom files are not automatically saved, you need to copy these into the build repo's sources folder: ```./sources/<major-kernelversion>/```.  
-This needs to have same file structure as the corresponding kernel tree.  
-For an example, see ```./sources/6.1.y```.
+After cloning/ updating the kernel, platform repos and after applying current volumio patches, the build process reaches a break-point and displays:
+```
+[ .. ] Now ready for additional sources and patches
+[ .... ] Workfolder <workfolder> will be used to create the patch file
+[ .... ] Press [Enter] key to resume ...
+```
+At this point new patches can be made in the kernel tree.  
+When you're ready, or did not have any patches, press ```[Enter]```.  
+* Without patches, the process ends here.  
+* With patches, you will be prompted to enter a name for a patch file, which will also be used as a commit message.   
+Please use a meaningfull name, refer to the existing patch names as examples.   
+The patch will automatically be prefixed with a sequence number (the highest existing prefix number, incremented by 1), extension ```.patch``` will also be added to the name.  
+You can change/ correct the name later, but be carefull with the sequence number.  
+The sequence number ensures that patches are applied in the patched order (a patch could be a patch on top o another).     
+Check the patch and when correct, move it to the ```build-x86-platform/patch``` folder.   
+From here the patch will be used in the kernel build process. Patches (still) in the work folder have no effect.  
+You can clear the work folder afterwards.  
+
+### New kernel sources
+
+Keep these in folder ```build-x86-platform/sources``` for later reference, grouped by kernel version.
 
 ### Kernel configuration
-There is also an opportunity to change kernel configuration settings, using the menuconfig dialogue which will appear.  
-Just exit when you have no changes.  
-Configuration modifications will be saved in ```/platform-x86/packages-buster/amd64-volumio-min..._defconfig``` and reused with future kernel compiles.
+**```config.x86 parameter CONFIGURE_KERNEL```**  
+When set to "yes". the kernel configuration settings can be modified, the menuconfig dialogue will appear.  
+Configuration modifications will be saved in ```/platform-x86/packages-buster/amd64-volumio-min-<kernelbranch>_defconfig``` and reused with future kernel compiles.
 
-## **Add support for the current Release Candidate kernel**
+a## **Add support for a current Release Candidate kernel**
 Release Candidate kernels are not part of the ```linux-stable``` repo.  
 The compilation of such a kernel requires
 * manually clone the current kernel repo after checking the current rc name (e.g. 6.3-rc7):
@@ -76,15 +93,20 @@ Copy the last known ```amd64-volumio-min..._defconfig``` and name it (as an exam
 
 For the sources and patches, follow the instructions below (support for a new kernel).
 
-**Important** Omit any custom sources or patches in case it is used for bugzilla reporting.
+**Important** Custom patches will not be allowed.
 
 ## **Add support for a new major kernel**
 It is advised to use LTS kernels whenever possible. Once Volumio is working with an LTS version, you will have years of support to come. This kernel build process will keep maintenance effort to a minimum.
 * Create the new ```./sources/<kernelbranch>``` folder.
 * Create the new ```./patches/<kernelbranch>``` folder.
-* Copy the custom sources from a **previous** ```./sources/<major-kernelversion/``` (the closest version you have) to the new patches folder.
-    * Note: Some of the existing patches for Wireless Drivers may not apply anymore. Kernels 6.2.y and 6.3-rc7 already include more Realtek chip support. As an example,  RTL8822BU is supported out-of-the-box (and a few more). Please check for duplicates by comparing the ```Kconfig``` files in Realtek folders like ```rtw88``` and ```rtw99```. Just copy the remaining custom patches. 
-* modify ```./config/x86.conf```
+* Build the kernel first without patching or configuration chnages.
+For the patch-process, use the relevant patch sources from a **previous** ```./patches/<major-kernelversion/``` (the closest version you have) to the new patches folder. 
+    * Note: Some of the existing patches for Wireless Drivers may not apply anymore. E.g. kernels 6.2.y and 6.3-rc7 already include more Realtek chip support. As an example,  RTL8822BU is supported out-of-the-box (and a few more). Please check for duplicates by comparing the ```Kconfig``` files in Realtek folders like ```rtw88``` and ```rtw99```. Just copy the remaining custom patches. 
+    * re-apply the patches one-by-one using the patch-process as described above. Be aware, that patching or compiling may not always work.
+    * some may be mismatched a few lines in case the source was changed in the new kernel version.
+    * in case the patch does not apply anymore because of errors in custom sources, consult the internet and apply the necessary fixes or replace the patch & source. This is not always trivial.  
+
+* Modify ```./config/x86.conf```
     * comment the current kernel branch
     ```
     #KERNELBRANCH="6.1.y"
@@ -94,20 +116,15 @@ It is advised to use LTS kernels whenever possible. Once Volumio is working with
     ```
     KERNELBRANCH="6.2.y"
     ```
-* Start the build process.
 
-Be aware, that patching or compiling may not work.
-* in case patches do not apply
-    * the build process will have stopped at 
+    * modify the previous kernelbranch
     ```
-    Now ready for additional sources and patches
-    Press [Enter] key to resume ...
+    KERNELBRANCH_PREV="6.1.y"
     ```
-    * fix the failed patch manually (it can be mismatched a few lines in case the source was changed in the new kernel version)
-* in case the kernel does not apply because of errors in custom sources  
-Consult the internet and apply the necessary fixes, this is not always trivial  
-With the wireless drivers, refer to the README.md file in the corresponding ```./sources``` folder.  
-        The repo owners may already have created patches.
+
+    * See "kernel configuration" above, new kernels usually have support for new hardware, notably ethernet, wireless and bluetooth devices, but also touchscreens etc. In case you know some, make sure to enable them. In all other cases, you may have to rely on feedback from users. Don't forget to add corresponding firmware when needed.
+    
+* Start the build process.
 
 ## **Firmware Maintenance**
 
@@ -196,11 +213,18 @@ Add the new date to config/config.x86 and start the merge (see above)
 |||Kernel 6.1.y LTS: adapt usb audio patch to fit modified quirks.c
 |20230807|gkkpch|Ubuntu >=21.04 compresses .deb files with zstd. Repack them with xz compressed files, otherwise they cannot be processed with Volumio's build server with Debian 10
 |20230828|gkkpch|Switched to kernel 6.1.y LTS as default
-|||Kernel 5.10.y: bumped to 5.10.192
+|||Kernel 5.10.y: bumped to 5.10.192, frozen as of 20231208
 |||Kernel 6.1 y LTS: bumped to 6.1.49
 |||Firmware: added version from 20230804
 |20231030|gkkpch|Preparations for kernel 6.6.y (waiting for 6.6.y LTS)
-|20231108|gkkpch|Kernel 6.1 y LTS: bumped to 6.1.62
+|20231108|gkkpch|Kernel 6.1 y LTS: bumped to 6.1.62, frozen as of 20231208
+|20231208|gkkpch|Kernel 6.6.y LTS: bumped to 6.6.5
+|||Moved to Volumio repo
+|20231220|gkkpch|Documented the re-factored patching process
+|20231220|gkkpch|Remove commit-id from .deb package names"
+|20241127|gkkpch|Preparations for kernel 6.12.y (waiting for 6.12.y LTS)
+|20241128|gkkpch|Added DSD patches (from 6.6 plus a new one)
+|||Firmware: added version from 20241110
 <br />
 <br />
 <br />
@@ -208,4 +232,5 @@ Add the new date to config/config.x86 and start the merge (see above)
 <sub> January 2023/ Gé koerkamp
 <br />ge.koerkamp@gmail.com
 <br />04.01.2023 v1.0
+<br />08.12.2023 v1.1
 

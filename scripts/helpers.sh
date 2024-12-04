@@ -38,11 +38,11 @@ log() {
 
 	case $2 in
 	err)
-		echo -e "[${red} ${bold}error ${normal}]${red} $1 ${normal}$tmp"
+		echo -e "[${red} ${bold} error ${normal}]${red} $1 ${normal}$tmp"
 		;;
 
 	cfg)
-		echo -e "[${cyan} ${bold}cfg ${normal}]${yellow} $1 ${normal}$tmp"
+		echo -e "[${cyan} ${bold} cfg ${normal}]${yellow} $1 ${normal}$tmp"
 		;;
 
 	wrn)

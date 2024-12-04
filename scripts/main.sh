@@ -2,13 +2,17 @@
 
 log "Using these configuration parameters" "info"
 log "INSTALL_MOD_STRIP: ${INSTALL_MOD_STRIP}" "cfg"
-log "KERNELDIR: ${KERNELDIR}" "cfg"
-log "PATCHDIR: ${PATCHDIR}" "cfg"
-log "PLATFORMDIR: ${PLATFORMDIR}" "cfg"
+log "KERNELDIR        : ${KERNELDIR}" "cfg"
+log "CONFIGURE_KERNEL : ${CONFIGURE_KERNEL}" "cfg"
+log "PATCHDIR         : ${PATCHDIR}" "cfg"
+log "PATCH_KERNEL     : ${PATCH_KERNEL}" "cfg"
+log "PATCHWORKDIR     : ${PATCHWORKDIR}" "cfg"
+log "PLATFORMDIR      : ${PLATFORMDIR}" "cfg"
 
-log "KERNELREPO: ${KERNELREPO}" "cfg"
-log "KERNELBRANCH: ${KERNELBRANCH}" "cfg"
-log "LOCALVERSION: ${LOCALVERSION}" "cfg"
+log "KERNELREPO       : ${KERNELREPO}" "cfg"
+log "KERNELBRANCH_PREV: ${KERNELBRANCH_PREV}" "cfg"
+log "KERNELBRANCH     : ${KERNELBRANCH}" "cfg"
+log "LOCALVERSION     : ${LOCALVERSION}" "cfg"
 
 source "${SRC}"/scripts/functions.sh
 
@@ -24,16 +28,14 @@ add_additional_sources
 
 add_user_patches
 
-log "Now ready for additional sources and patches" "Info"
-read -p "Press [Enter] key to resume ..."
-
-if [[ ! $KERNELBRANCH =~ "-rc" ]]; then
-  git diff > $PATCHDIR/${KERNELBRANCH}/0001-custom-volumio.patch
-else
-  log "${KERNELBRANCH} is a release candidate, no patches to be saved" "info"
+if [ "${PATCH_KERNEL}" == "yes" ]; then
+   patch_kernel
+   exit
 fi
 
-kernel_config
+prep_kernel_config
+
+configure_kernel
 
 compile_kernel
 
